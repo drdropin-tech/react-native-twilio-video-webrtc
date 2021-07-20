@@ -1,6 +1,6 @@
 declare module "react-native-twilio-video-webrtc" {
-  import { ViewProps } from "react-native";
   import React from "react";
+  import { ViewProps } from "react-native";
 
   export interface TrackIdentifier {
     participantSid: string;
@@ -147,7 +147,7 @@ declare module "react-native-twilio-video-webrtc" {
     connect: (options: iOSConnectParams | androidConnectParams) => void;
     disconnect: () => void;
     flipCamera: () => void;
-    toggleSoundSetup: (speaker: boolean) => void;
+    toggleSoundSetup: (speaker: boolean) => Promise<{inputs: Array<string>, outputs: Array<string>}>;
     getStats: () => void;
     publishLocalAudio: () => void;
     unpublishLocalAudio: () => void;

@@ -6,9 +6,9 @@
 //
 //
 
-import { Component } from 'react'
 import PropTypes from 'prop-types'
-import { NativeModules, NativeEventEmitter, View } from 'react-native'
+import { Component } from 'react'
+import { NativeEventEmitter, NativeModules, View } from 'react-native'
 
 const { TWVideoModule } = NativeModules
 
@@ -219,8 +219,8 @@ export default class TwilioVideo extends Component {
   /**
    * Toggle audio setup from speaker (default) and headset
    */
-  toggleSoundSetup (speaker) {
-    TWVideoModule.toggleSoundSetup(speaker)
+  async toggleSoundSetup (speaker) {
+    return TWVideoModule.toggleSoundSetup(speaker)
   }
 
   /**

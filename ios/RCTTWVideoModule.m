@@ -287,19 +287,56 @@ RCT_EXPORT_METHOD(flipCamera) {
   }
 }
 
-RCT_EXPORT_METHOD(toggleSoundSetup:(BOOL)speaker) {
-  NSError *error = nil;
-  kTVIDefaultAVAudioSessionConfigurationBlock();
-  AVAudioSession *session = [AVAudioSession sharedInstance];
-  AVAudioSessionMode mode = speaker ? AVAudioSessionModeVideoChat : AVAudioSessionModeVoiceChat ;
-  // Overwrite the audio route
-  if (![session setMode:mode error:&error]) {
-    NSLog(@"AVAudiosession setMode %@",error);
-  }
+RCT_REMAP_METHOD(toggleSoundSetup, speaker:(BOOL)speaker resolver: (RCTPromiseResolveBlock)resolve
+                 rejecter:(RCTPromiseRejectBlock)reject){
+    AVAudioSessionRouteDescription *description = [self _toggleSoundSetup:speaker];
+    
+    NSArray *inputs = [description.inputs valueForKey:@"portName"];
+    NSArray *outputs = [description.outputs valueForKey:@"portName"];
+    
+    NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+    dict[@"inputs"] = inputs;
+    dict[@"outputs"] = outputs;
+    resolve(dict);
+}
 
-  if (![session overrideOutputAudioPort:AVAudioSessionPortOverrideNone error:&error]) {
-    NSLog(@"AVAudiosession overrideOutputAudioPort %@",error);
-  }
+- (AVAudioSessionRouteDescription *)_toggleSoundSetup:(bool)speaker {
+	NSError *error = nil;
+	kTVIDefaultAVAudioSessionConfigurationBlock();
+
+  	AVAudioSession *session = [AVAudioSession sharedInstance];
+
+    AVAudioSessionMode mode = speaker ? AVAudioSessionModeVideoChat : AVAudioSessionModeVoiceChat;
+    AVAudioSessionCategoryOptions options = speaker ? AVAudioSessionCategoryOptionDefaultToSpeaker : AVAudioSessionCategoryOptionAllowBluetooth;
+    
+    if(![session setCategory:AVAudioSessionCategoryPlayAndRecord mode:mode options:options error:&error]){
+        NSLog(@"AVAudiosession setCategory %@",error);
+	}
+
+    if ([session respondsToSelector:@selector(availableInputs)]) {
+        for (AVAudioSessionPortDescription *input in [session availableInputs]){
+            bool isBluetoothDevice = [self isBluetoothDevice:[input portType]];
+            if ((!speaker && isBluetoothDevice) || (speaker && !isBluetoothDevice)){
+				if(![session setPreferredInput:input error:&error]){
+					NSLog(@"AVAudiosession setPreferredInput failed %@",error);
+                }else{
+                    break;
+                }
+            }
+        }
+    }
+
+    if (![session overrideOutputAudioPort:AVAudioSessionPortOverrideNone error:&error]) {
+		NSLog(@"AVAudiosession overrideOutputAudioPort %@",error);
+	}
+    
+    return [session currentRoute];
+}
+
+- (BOOL)isBluetoothDevice:(NSString*)portType {
+    
+    return ([portType isEqualToString:AVAudioSessionPortBluetoothA2DP] ||
+            [portType isEqualToString:AVAudioSessionPortBluetoothHFP]);
 }
 
 -(void)convertBaseTrackStats:(TVIBaseTrackStats *)stats result:(NSMutableDictionary *)result {

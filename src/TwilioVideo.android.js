@@ -7,16 +7,13 @@
  *   Jonathan Chang <slycoder@gmail.com>
  */
 
-import {
-  Platform,
-  UIManager,
-  View,
-  findNodeHandle,
-  requireNativeComponent
-} from 'react-native'
-import React, { Component } from 'react'
-
 import PropTypes from 'prop-types'
+import React, { Component } from 'react'
+import {
+  findNodeHandle, Platform, requireNativeComponent, UIManager,
+  View
+} from 'react-native'
+
 
 const propTypes = {
   ...View.propTypes,
@@ -251,8 +248,10 @@ class CustomTwilioVideoView extends Component {
     this.runCommand(nativeEvents.disableOpenSLES, [])
   }
 
-  toggleSoundSetup (speaker) {
-    this.runCommand(nativeEvents.toggleSoundSetup, [speaker])
+  async toggleSoundSetup (speaker) {
+    this.runCommand(nativeEvents.toggleSoundSetup, [speaker]);
+    // currently not supported
+    return Promise.resolve({inputs: [], outputs: []})
   }
 
   runCommand (event, args) {
